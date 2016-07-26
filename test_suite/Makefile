@@ -40,7 +40,7 @@
 ##
 ################################################################################
 
-TARGET		= hsa_memory_test
+TARGET		= memory_test_hsa
 
 LFLAGS		= -Wl,--unresolved-symbols=ignore-in-shared-libs
 
@@ -50,12 +50,12 @@ CC				:= gcc
 
 C_FILES		:= $(foreach dir, $(SRC_DIR), $(wildcard $(dir)/*.c))
 
-OBJ_FILES	:= $(notdir $(C_FILES:.c=.o))
+OBJ_FILES	:= $(C_FILES:.c=.o)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
-	$(CC) $(LFLAGS) $(OBJ_FILES) -L/opt/rocm/lib -lhsa-runtime64 -o vector_copy
+	$(CC) $(LFLAGS) $(OBJ_FILES) -L/opt/rocm/lib -lhsa-runtime64 -o $(TARGET)
 
 %.o: %.c
 	$(CC) -c -I/opt/rocm/include -o $@ $< -std=c99

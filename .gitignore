@@ -1,3 +1,6 @@
+# Executable
+memory_test_hsa
+
 # Object files
 *.o
 *.ko
