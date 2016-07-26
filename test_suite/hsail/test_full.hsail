@@ -1,0 +1,99 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// The University of Illinois/NCSA
+// Open Source License (NCSA)
+//
+// Copyright (c) 2014-2015, Advanced Micro Devices, Inc. All rights reserved.
+//
+// Developed by:
+//
+//                 AMD Research and AMD HSA Software Development
+//
+//                 Advanced Micro Devices, Inc.
+//
+//                 www.amd.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal with the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+//  - Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimers.
+//  - Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimers in
+//    the documentation and/or other materials provided with the distribution.
+//  - Neither the names of Advanced Micro Devices, Inc,
+//    nor the names of its contributors may be used to endorse or promote
+//    products derived from this Software without specific prior written
+//    permission.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS WITH THE SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+module &m:1:0:$full:$large:$default;
+
+decl prog function &abort()();
+
+group_u32 &x;
+group_u32 &y;
+
+prog kernel &__vector_copy_kernel(
+	kernarg_u64 %in,
+	kernarg_u64 %out)
+{
+@__vector_copy_kernel_entry:
+	// BB#0:          -                   // %entry
+	workitemabsid_u32		$s0, 0;						// get work item id
+
+	//  TODO: betterize code, kernel name, printing,
+	//	-- initialize variable (arguments ?)
+	//  implement while 0 thread waiting to force one thread to go before the other
+	//  Do a work group thread one writing in array
+	//  Implement more tests from the pdf with automatic -- try both HSAIL or C
+	//  See if possible to determine active device CPU or GPU
+
+	// innit group vqriqbles
+	//st_group_u32 8, [&x];
+	//st_group_u32 8, [&y];
+	//barrier;
+
+	// Setup d1 to write in array[item id]
+	cvt_s64_s32	$d0, $s0;									// convert 32 to 64
+	shl_u64	$d0, $d0, 2;									// shift left the work item id, to multiply by sizeof int
+	ld_kernarg_align(8)_width(all)_u64	$d1, [%out];	// load address of out in d1
+	add_u64	$d1, $d1, $d0;														// add shifted id to address of d1, moves to the correct position
+	ld_kernarg_align(8)_width(all)_u64	$d2, [%in];		// same for in
+	add_u64	$d0, $d2, $d0;														// same for in
+
+	cmp_eq_b1_u32				$c0, $s0, 0;			// compare if id equal zero
+	cbr_b1							$c0, @ZERO;				// go to label if true
+
+	cmp_eq_b1_u32				$c0, $s0, 1;			// compare if id equal one
+	cbr_b1							$c0, @ONE;				// go to label
+
+	st_global_u32	5, [$d1];
+@END:
+	ret;																	// Return if false
+
+@ZERO:
+	st_group_u32 1, [&x];
+	ld_group_u32 $s0, [&y];
+	st_global_u32	$s0, [$d1];
+	br @END;
+
+@ONE:
+	st_group_u32 1, [&y];
+	ld_group_u32 $s0, [&x];
+	st_global_u32	$s0, [$d1];
+	br @END;
+};
