@@ -61,4 +61,9 @@ $(TARGET): $(OBJ_FILES)
 	$(CC) -c -I/opt/rocm/include -o $@ $< -std=c99
 
 clean:
-	rm -rf *.o $(TARGET)
+	rm -rf $(OBJ_FILES)
+
+fclean: clean
+	rm -rf $(TARGET)
+
+re: clean all

@@ -40,7 +40,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module &m:1:0:$full:$large:$default;
+module &m:1:0:$base:$large:$default;
 
 decl prog function &abort()();
 
