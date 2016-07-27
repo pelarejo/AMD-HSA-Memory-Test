@@ -44,16 +44,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_finalize.h"
 
-#define check(msg, status) \
-if (status != HSA_STATUS_SUCCESS) { \
-    printf("%s failed.\n", #msg); \
-    exit(1); \
-} else { \
-   printf("%s succeeded.\n", #msg); \
-}
+#include "hsail_validation.h"
+#include "tools.h"
 
 /*
  * Loads a BRIG module from a specified file. This
@@ -88,67 +84,24 @@ int load_module_from_file(const char* file_name, hsa_ext_module_t* module) {
     return rc;
 }
 
-/*
- * Determines if the given agent is of type HSA_DEVICE_TYPE_GPU
- * and sets the value of data to the agent handle if it is.
- */
-static hsa_status_t get_gpu_agent(hsa_agent_t agent, void *data) {
-    hsa_status_t status;
-    hsa_device_type_t device_type;
-    status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
-    if (HSA_STATUS_SUCCESS == status && HSA_DEVICE_TYPE_GPU == device_type) {
-        hsa_agent_t* ret = (hsa_agent_t*)data;
-        *ret = agent;
-        return HSA_STATUS_INFO_BREAK;
-    }
-    return HSA_STATUS_SUCCESS;
-}
+int parseArguments(int argc, char **argv) {
+    int opt;
 
-/*
- * Determines if a memory region can be used for kernarg
- * allocations.
- */
-static hsa_status_t get_kernarg_memory_region(hsa_region_t region, void* data) {
-    hsa_region_segment_t segment;
-    hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment);
-    if (HSA_REGION_SEGMENT_GLOBAL != segment) {
-        return HSA_STATUS_SUCCESS;
-    }
-
-    hsa_region_global_flag_t flags;
-    hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
-    if (flags & HSA_REGION_GLOBAL_FLAG_KERNARG) {
-        hsa_region_t* ret = (hsa_region_t*) data;
-        *ret = region;
-        return HSA_STATUS_INFO_BREAK;
-    }
-
-    return HSA_STATUS_SUCCESS;
-}
-
-/*
- * Determines if a memory region can be used for fine grained
- * allocations.
- */
-static hsa_status_t get_fine_grained_memory_region(hsa_region_t region, void* data) {
-    hsa_region_segment_t segment;
-    hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment);
-    if (HSA_REGION_SEGMENT_GLOBAL != segment) {
-        return HSA_STATUS_SUCCESS;
-    }
-
-    hsa_region_global_flag_t flags;
-    hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
-    if (flags & HSA_REGION_GLOBAL_FLAG_FINE_GRAINED) {
-        hsa_region_t* ret = (hsa_region_t*) data;
-        *ret = region;
-        return HSA_STATUS_INFO_BREAK;
-    }
-
-    return HSA_STATUS_SUCCESS;
+    while ((opt = getopt(argc, argv, "v")) != -1) {
+      switch (opt) {
+        case 'v': verbose_print = true;
+          break;
+        default:
+        fprintf(stderr, "Usage:./%s [-v]\n", argv[0]);
+        return false;
+      }
+      return true;
+  }
 }
 
 int main(int argc, char **argv) {
+    parseArguments(argc, argv);
+
     hsa_status_t err;
 
     err = hsa_init();
@@ -202,7 +155,7 @@ int main(int argc, char **argv) {
     uint32_t queue_size = 0;
     err = hsa_agent_get_info(agent, HSA_AGENT_INFO_QUEUE_MAX_SIZE, &queue_size);
     check(Querying the agent maximum queue size, err);
-    printf("The maximum queue size is %u.\n", (unsigned int) queue_size);
+    verb_printf("The maximum queue size is %u.\n", (unsigned int) queue_size);
 
     /*
      * Create a queue using the maximum size.
@@ -231,10 +184,10 @@ int main(int argc, char **argv) {
     hsa_ext_module_t module;
     if(HSA_PROFILE_FULL == profile) {
         printf("%s\n", "----------> Running Full");
-        load_module_from_file("test_full.brig",&module);
+        load_module_from_file("./hsail/test_full.brig",&module);
     } else {
         printf("%s\n", "----------> Running Basic");
-        load_module_from_file("vector_copy_base.brig",&module);
+        load_module_from_file("./hsail/vector_copy_base.brig",&module);
     }
 
     /*
@@ -460,22 +413,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-/*
- * Validate the data in the output buffer.
- */
-/*int valid=1;
-int fail_index=0;
-for(int i=0; i<1024*1024; i++) {
-    if(out[i]!=in[i]) {
-        fail_index=i;
-        valid=0;
-        break;
-    }
-}
-
-if(valid) {
-    printf("Passed validation.\n");
-} else {
-    printf("VALIDATION FAILED!\nBad index: %d\n", fail_index);
-}*/
