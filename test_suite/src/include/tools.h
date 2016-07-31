@@ -4,7 +4,9 @@
 #define true 1
 #define false 0
 
-void verb_printf();
+extern int verbose_print;
+
+void verb_printf(const char *format, ...);
 
 #define check(msg, status) \
 if (status != HSA_STATUS_SUCCESS) { \
@@ -13,7 +15,5 @@ if (status != HSA_STATUS_SUCCESS) { \
 } else { \
    verb_printf("%s succeeded.\n", #msg); \
 }
-
-extern int verbose_print;
 
 #endif

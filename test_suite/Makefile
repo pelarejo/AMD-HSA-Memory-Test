@@ -44,6 +44,10 @@ TARGET		= memory_test_hsa
 
 LFLAGS		= -Wl,--unresolved-symbols=ignore-in-shared-libs
 
+CFLAGS		= -std=c99 $(INCFLAGS)
+
+INCFLAGS	= -I./src/include -I/opt/rocm/include
+
 SRC_DIR		= src
 
 CC				:= gcc
@@ -58,7 +62,7 @@ $(TARGET): $(OBJ_FILES)
 	$(CC) $(LFLAGS) $(OBJ_FILES) -L/opt/rocm/lib -lhsa-runtime64 -o $(TARGET)
 
 %.o: %.c
-	$(CC) -c -I/opt/rocm/include -o $@ $< -std=c99
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
 	rm -rf $(OBJ_FILES)
