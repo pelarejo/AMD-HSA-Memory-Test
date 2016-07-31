@@ -1,6 +1,11 @@
 # Executable
 memory_test_hsa
 
+# Other
+*.swp
+*.brig
+*todo
+
 # Object files
 *.o
 *.ko
