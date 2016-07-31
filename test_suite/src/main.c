@@ -186,8 +186,9 @@ int main(int argc, char **argv) {
         printf("%s\n", "----------> Running Full");
         load_module_from_file("./hsail/test_full.brig",&module);
     } else {
-        printf("%s\n", "----------> Running Basic");
-        load_module_from_file("./hsail/vector_copy_base.brig",&module);
+        printf("%s\n", "----------> Basic NOT IMPLEMENTED EXITING");
+        //load_module_from_file("./hsail/test_base.brig",&module);
+        return 0;
     }
 
     /*
@@ -249,7 +250,7 @@ int main(int argc, char **argv) {
     * Extract the symbol from the executable.
     */
     hsa_executable_symbol_t symbol;
-    err = hsa_executable_get_symbol(executable, NULL, "&__vector_copy_kernel", agent, 0, &symbol);
+    err = hsa_executable_get_symbol(executable, NULL, "&__test_full_kernel", agent, 0, &symbol);
     check(Extract the symbol from the executable, err);
 
     /*
