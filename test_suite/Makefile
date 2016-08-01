@@ -44,11 +44,11 @@ TARGET		= memory_test_hsa
 
 LFLAGS		= -Wl,--unresolved-symbols=ignore-in-shared-libs
 
-CFLAGS		= -std=c99 $(INCFLAGS)
+CFLAGS		= -std=gnu99 -g $(INCFLAGS)
 
-INCFLAGS	= -I./src/include -I/opt/rocm/include
+INCFLAGS	= -I/opt/rocm/include -I./src/include -I./src/tests/
 
-SRC_DIR		= src
+SRC_DIR		= src src/tests src/hsail
 
 CC				:= gcc
 

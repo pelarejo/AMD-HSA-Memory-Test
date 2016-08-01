@@ -40,7 +40,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module &m:1:0:$full:$large:$default;
+module &n:1:0:$full:$large:$default;
 
 decl prog function &abort()();
 
@@ -50,25 +50,20 @@ group_u8 &y;
 group_u8 &w;
 group_u8 &z;
 
-prog kernel &__test_full_kernel(
+prog kernel &__test_full_2_kernel(
 	kernarg_u64 %in,
 	kernarg_u64 %out)
 {
-@__test_full_kernel_entry:
+@__test_full_2_kernel_entry:
 	// BB#0:          -                   // %entry
 	workitemabsid_u32		$s0, 0;						// get work item id
-
-
-	// innit group variables
-	//st_group_u8 3, [&x];
-	//st_group_u8 3, [&y];
-	//barrier;
 
 	// Setup d1 to write in array[item id]
 
 	cvt_s64_s32	$d0, $s0;															// convert 32 to 64
 	ld_kernarg_align(8)_width(all)_u64	$d1, [%out];	// load address of out in d1
 	add_u64	$d1, $d1, $d0;														// add shifted id to address of d1, moves to the correct position
+	add_u64	$d1, $d1, 2;
 	ld_kernarg_align(8)_width(all)_u64	$d2, [%in];		// same for in
 	add_u64	$d0, $d2, $d0;														// same for in
 
@@ -83,14 +78,14 @@ prog kernel &__test_full_kernel(
 	ret;																	// Return if false
 
 @ZERO:
-	st_group_u8 2, [&x];
-	ld_group_u8 $s0, [&y];
+	st_group_u8 9, [&w];
+	ld_group_u8 $s0, [&z];
 	st_global_u8	$s0, [$d1];
 	br @END;
 
 @ONE:
-	st_group_u8 1, [&y];
-	ld_group_u8 $s0, [&x];
+	st_group_u8 8, [&z];
+	ld_group_u8 $s0, [&w];
 	st_global_u8	$s0, [$d1];
 	br @END;
 };

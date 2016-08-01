@@ -40,7 +40,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "hsail_validation.h"
+#include "hsail_helper.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * Determines if the given agent is of type HSA_DEVICE_TYPE_GPU
@@ -100,4 +104,34 @@ hsa_status_t get_fine_grained_memory_region(hsa_region_t region, void* data) {
     }
 
     return HSA_STATUS_SUCCESS;
+}
+
+/*
+ * Loads a BRIG module from a specified file. This
+ * function does not validate the module.
+ */
+int load_module_from_file(const char* file_name, hsa_ext_module_t* module) {
+    int rc = -1;
+    FILE *fp = fopen(file_name, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "Error: %s file not found\n", file_name);
+        return 1;
+    }
+
+    rc = fseek(fp, 0, SEEK_END);
+    size_t file_size = (size_t) (ftell(fp) * sizeof(char));
+    rc = fseek(fp, 0, SEEK_SET);
+
+    char* buf = (char*) malloc(file_size);
+    memset(buf,0,file_size);
+
+    size_t read_size = fread(buf,sizeof(char),file_size,fp);
+    if(read_size != file_size) {
+        free(buf);
+    } else {
+        rc = 0;
+        *module = (hsa_ext_module_t) buf;
+    }
+    fclose(fp);
+    return rc;
 }

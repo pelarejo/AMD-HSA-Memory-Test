@@ -13,3 +13,8 @@ void verb_printf(const char *format, ...) {
     va_end(args);
   }
 }
+
+int failed(const char* msg) {
+  fprintf(stderr, "%s\n", msg);
+  return 1;
+}
