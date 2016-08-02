@@ -44,7 +44,7 @@ TARGET		= memory_test_hsa
 
 LFLAGS		= -Wl,--unresolved-symbols=ignore-in-shared-libs
 
-CFLAGS		= -std=gnu99 $(INCFLAGS)
+CFLAGS		= -std=gnu99 -g $(INCFLAGS)
 
 INCFLAGS	= -I/opt/rocm/include -I./src/include -I./src/tests/
 

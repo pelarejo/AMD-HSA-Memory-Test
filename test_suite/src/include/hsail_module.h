@@ -12,7 +12,7 @@ typedef struct module_s {
   struct module_s *next;
 } hsail_module_t;
 
-int new_test_module(hsail_module_t** list, char *name);
-int destroy_test_modules(hsail_module_t* list);
+int new_hsail_module(hsail_module_t** list, char *name);
+int destroy_hsail_modules(hsail_module_t* list);
 
 #endif

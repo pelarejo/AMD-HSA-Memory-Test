@@ -1,23 +1,22 @@
-#include "test_racing.h"
-#include "tools.h"
-#include "hsail_runtime.h"
-#include "hsail_finalize.h"
-#include "test_suite.h"
+#include "tests.h"
 #include <stdio.h>
-#include <string.h>
 
-int test_racing_simple(char *in, char *out, hsail_runtime_t* run) {
-  // CREATE program
-  //LOAD module
-  // Create signals
-  //analyse output
-  hsail_module_t* start = NULL;
-  new_test_module(&start, "test_full");
-  new_test_module(&start, "test_full_2");
+hsail_module_t* test_racing_simple(hsail_kargs_t* args) {
+  hsail_module_t* list = NULL;
+  if (new_hsail_module(&list, "test_full") == 1
+      || new_hsail_module(&list, "test_full_2") == 1) {
+        return NULL;
+    }
 
-  hsail_finalize_t fin;
+    reset_arguments(args);
+    return list;
+}
 
-  //finalize_module(start, run, &fin);
-
+int test_racing_simple_res(hsail_kargs_t* args) {
+  printf("%s", "-------out------> ");
+  for(int i = 0; i < 10; i++) {
+    printf("%d.", ((char*)args->out)[i]);
+  }
+  printf("%s", "\n");
   return 0;
 }

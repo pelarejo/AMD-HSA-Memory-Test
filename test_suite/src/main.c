@@ -58,109 +58,35 @@
 int main(int argc, char **argv) {
   if (parseArguments(argc, argv) == false) return 1;
 
-  test_unit_t* suite;
-  int size;
+  // TODO: check error
+  // TODO: provide masks to see which variable is set
+  // INIT
   hsail_runtime_t run;
-
-  //TODO: check error
   if (initialize_hsail(&run) != 0) return failed("Could not initialize_hsail");
 
   if (initialize_queue(run.agent, &run.queue) != 0) return failed("Could not create queue");
 
-  hsail_kargs_t arg;
-  allocate_arguments(&run, &arg);
-
-  hsail_module_t* start = NULL;
-  if (new_test_module(&start, "test_full") == 1
-      || new_test_module(&start, "test_full_2") == 1) {
-        return 1;
-    }
-
-  hsail_finalize_t fin;
-  if (finalize_modules(start, &run, &fin)) return 1;
-
   // SIGNAL
-  /*
-   * Create a signal to wait for the dispatch to finish.
-   */
-  hsa_signal_t signal;
-  int module_nbr = 2;
   hsa_status_t err;
-  err=hsa_signal_create(module_nbr, 0, NULL, &signal);
+  err = hsa_signal_create(0, 0, NULL, &run.signum);
   check(Creating a HSA signal, err);
 
   // ARGUMENTS
+  if (allocate_arguments(run.agent, &run.args) == 1) return failed("Could not allocate arguments");
 
-  hsail_kargs_t args;
-  allocate_arguments(&run, &args);
+  printf("%s\n", "=== Starting Testing ===");
+  // RUN TESTS
+  int size;
+  test_unit_t* suite;
+  if ((size = init_tests(&suite)) == -1) return failed("Could not allocate test suite");
 
-  hsail_module_t* tmp = start;
-  while (tmp != NULL) {
-    allocate_kernarg(&run, &args, &tmp->pkt_info);
-    tmp = tmp->next;
-  }
+  run_tests(suite, size, &run);
 
-  // QUEUEING PACKET
-  int index;
-  tmp = start;
-  while (tmp != NULL) {
-    index = enqueue_packet(run.queue, signal, &tmp->pkt_info);
-    hsa_signal_store_relaxed((run.queue)->doorbell_signal, index);
-    tmp = tmp->next;
-  }
-  check(Dispatching the kernel, HSA_STATUS_SUCCESS);
-  /*
-   * Wait on the dispatch completion signal until the kernel is finished.
-   */
-  while (hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1,
-      UINT64_MAX, HSA_WAIT_STATE_BLOCKED) != 0);
+  printf("%s\n","\n=== Testing Ended ===");
 
-  /*
-   * Validate the data in the output buffer.
-   */
-  int valid = 1;
-  int fail_index = 0;
-  printf("%s", "-------out------> ");
-  for(int i=0; i<1024*1024; i++) {
-      if (i < 10) {
-        printf("%d.", ((char*)args.out)[i]);
-      } else {
-          break;
-      }
-  }
-  printf("%s", "\n");
-
-  if(valid) {
-      printf("Passed validation.\n");
-  } else {
-      printf("VALIDATION FAILED!\nBad index: %d\n", fail_index);
-  }
-
-  /*
-   * Cleanup all allocated resources.
-   */
-  destroy_test_modules(start);
-
-  err = hsa_signal_destroy(signal);
-  check(Destroying the signal, err);
-
-  err = hsa_executable_destroy(fin.executable);
-  check(Destroying the executable, err);
-
-  err = hsa_code_object_destroy(fin.code_object);
-  check(Destroying the code object, err);
-
-  err = hsa_queue_destroy(run.queue);
-  check(Destroying the queue, err);
-
-  err = hsa_memory_free(args.in);
-  check(Freeing in argument memory buffer, err);
-
-  err = hsa_memory_free(args.out);
-  check(Freeing out argument memory buffer, err);
-
-  err = hsa_shut_down();
-  check(Shutting down the runtime, err);
+  // CLEANUP.
+  destroy_tests(suite);
+  destroy_hsail(&run);
 
   return 0;
 }
@@ -179,7 +105,3 @@ int parseArguments(int argc, char **argv) {
       return true;
   }
 }
-
-//if ((size = init_tests(suite)) == -1) return failed("Could not init test suite");
-//run_tests(suite, size, &run);
-//destroy_tests(suite);

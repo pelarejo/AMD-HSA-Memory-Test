@@ -105,3 +105,22 @@ int enqueue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t* pkt_info
   hsa_queue_store_write_index_relaxed(queue, index+1);
   return index;
 }
+
+int destroy_hsail(hsail_runtime_t* run) {
+  hsa_status_t err;
+
+  if (free_arguments(&run->args) == 1) {
+    return 1;
+  }
+
+  err = hsa_signal_destroy(run->signum);
+  check(Destroying the signal, err);
+
+  err = hsa_queue_destroy(run->queue);
+  check(Destroying the queue, err);
+
+
+  err = hsa_shut_down();
+  check(Shutting down the runtime, err);
+  return 0;
+}
