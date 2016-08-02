@@ -40,6 +40,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "main.h"
 #include "hsail_helper.h"
 #include "hsail_runtime.h"
 #include "hsail_memory.h"
@@ -74,7 +75,7 @@ int parseArguments(int argc, char **argv) {
 int main(int argc, char **argv) {
   if (parseArguments(argc, argv) == false) return 1;
 
-  test_unit* suite;
+  test_unit_t* suite;
   int size;
   hsail_runtime_t run;
 
@@ -86,8 +87,8 @@ int main(int argc, char **argv) {
   hsail_kargs_t arg;
   allocate_arguments(&run, &arg);
 
-  test_details* start = new_test_details("test_full");
-  start->next = new_test_details("test_full_2");
+  test_module_t* start = new_test_module_t("test_full");
+  start->next = new_test_module_t("test_full_2");
 
   hsail_finalize_t fin;
   if (finalize_module(start, &run, &fin)) return 1;
@@ -107,7 +108,7 @@ int main(int argc, char **argv) {
   hsail_kargs_t args;
   allocate_arguments(&run, &args);
 
-  test_details* tmp = start;
+  test_module_t* tmp = start;
   while (tmp != NULL) {
     allocate_kernarg(&run, &args, &tmp->pkt_info);
     tmp = tmp->next;

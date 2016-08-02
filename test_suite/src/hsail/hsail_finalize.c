@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 
-int finalize_module(test_details* list, hsail_runtime_t* run, hsail_finalize_t* fin) {
+int finalize_module(test_module_t* list, hsail_runtime_t* run, hsail_finalize_t* fin) {
   char buff[512];
-  test_details* tmp = list;
+  test_module_t* tmp = list;
   while (tmp != NULL) {
     sprintf(buff, "./hsail/%s.brig", tmp->name);
     if (load_module_from_file(buff, &(tmp->module)) != 0) {

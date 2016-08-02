@@ -10,6 +10,6 @@ typedef struct {
   hsa_code_object_t code_object;
 } hsail_finalize_t;
 
-int finalize_module(test_details* list, hsail_runtime_t* run, hsail_finalize_t* fin);
+int finalize_module(test_module_t* list, hsail_runtime_t* run, hsail_finalize_t* fin);
 
 #endif

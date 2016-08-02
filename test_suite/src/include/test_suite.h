@@ -11,19 +11,19 @@ typedef struct {
   char name[256];
   int ctr;
   test_ptr run;
-} test_unit;
+} test_unit_t;
 
-typedef struct test_details_s {
+typedef struct test_module_s {
   char* name;
+  hsail_kobj_t pkt_info;
   hsa_ext_module_t module;
   hsa_executable_symbol_t symbol;
-  hsail_kobj_t pkt_info;
-  struct test_details_s *next;
-} test_details;
+  struct test_module_s *next;
+} test_module_t;
 
-int init_tests(test_unit* suite);
-int run_tests(test_unit* suite, int size, hsail_runtime_t* runtime);
-int destroy_tests(test_unit* suite);
-test_details* new_test_details(char *name);
+int init_tests(test_unit_t* suite);
+int run_tests(test_unit_t* suite, int size, hsail_runtime_t* runtime);
+int destroy_tests(test_unit_t* suite);
+test_module_t* new_test_module_t(char *name);
 
 #endif
