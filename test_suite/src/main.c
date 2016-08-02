@@ -87,8 +87,11 @@ int main(int argc, char **argv) {
   hsail_kargs_t arg;
   allocate_arguments(&run, &arg);
 
-  test_module_t* start = new_test_module_t("test_full");
-  start->next = new_test_module_t("test_full_2");
+  test_module_t* start = NULL;
+  if (new_test_module(&start, "test_full") == 1
+      || new_test_module(&start, "test_full_2") == 1) {
+        return 1;
+    }
 
   hsail_finalize_t fin;
   if (finalize_module(start, &run, &fin)) return 1;
@@ -118,7 +121,7 @@ int main(int argc, char **argv) {
   int index;
   tmp = start;
   while (tmp != NULL) {
-    index = queue_packet(run.queue, signal, tmp->pkt_info);
+    index = queue_packet(run.queue, signal, &tmp->pkt_info);
     hsa_signal_store_relaxed((run.queue)->doorbell_signal, index);
     tmp = tmp->next;
   }

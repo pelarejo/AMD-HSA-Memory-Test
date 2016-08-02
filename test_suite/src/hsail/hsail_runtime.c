@@ -98,19 +98,19 @@ int extract_symbol(hsail_kobj_t* pkt_info, hsa_executable_symbol_t symbol) {
   return 0;
 }
 
-int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t kobj_info) {
+int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t* pkt_info) {
   /*
    * Obtain the current queue write index.
    * TODO: Should verify if queue not full
    */
   uint64_t index = hsa_queue_load_write_index_relaxed(queue);
 
-  /*
-   * Write the aql packet at the calculated queue index address.
-   */
+
+  // Write the aql packet at the calculated queue index address.
   const uint32_t queueMask = queue->size - 1;
   hsa_kernel_dispatch_packet_t* dispatch_packet = &(((hsa_kernel_dispatch_packet_t*)(queue->base_address))[index&queueMask]);
 
+  // Prepare dispatch packet
   dispatch_packet->setup  |= 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
   dispatch_packet->workgroup_size_x = (uint16_t)256;
   dispatch_packet->workgroup_size_y = (uint16_t)1;
@@ -119,11 +119,12 @@ int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t kobj_info) 
   dispatch_packet->grid_size_y = 1;
   dispatch_packet->grid_size_z = 1;
   dispatch_packet->completion_signal = sign;
-  dispatch_packet->kernel_object = kobj_info.kernel_object;
-  dispatch_packet->kernarg_address = (void*) kobj_info.kernarg_address;
-  dispatch_packet->private_segment_size = kobj_info.private_segment_size;
-  dispatch_packet->group_segment_size = kobj_info.group_segment_size;
+  dispatch_packet->kernel_object = pkt_info->kernel_object;
+  dispatch_packet->kernarg_address = (void*) pkt_info->kernarg_address;
+  dispatch_packet->private_segment_size = pkt_info->private_segment_size;
+  dispatch_packet->group_segment_size = pkt_info->group_segment_size;
 
+  // Header generation
   uint16_t header = 0;
   header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE;
   header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
@@ -131,9 +132,8 @@ int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t kobj_info) 
 
   __atomic_store_n((uint16_t*)(&dispatch_packet->header), header, __ATOMIC_RELEASE);
 
-  /*
-   * Increment the write index and ring the doorbell to dispatch the kernel.
-   */
+
+  // Increment the write index and ring the doorbell to dispatch the kernel.
   hsa_queue_store_write_index_relaxed(queue, index+1);
   return index;
 }

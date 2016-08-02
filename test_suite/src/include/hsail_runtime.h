@@ -22,7 +22,7 @@ typedef struct {
 int initialize_hsail(hsail_runtime_t* run);
 int create_queue(hsa_agent_t agent, hsa_queue_t** queue);
 int create_program(hsa_ext_program_t* program, hsail_runtime_t* run);
-int extract_symbol(hsail_kobj_t* kobj_info, hsa_executable_symbol_t symbol);
-int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t kobj_info);
+int extract_symbol(hsail_kobj_t* pkt_info, hsa_executable_symbol_t symbol);
+int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t* pkt_info);
 
 #endif
