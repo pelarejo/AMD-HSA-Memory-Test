@@ -41,18 +41,21 @@ int initialize_hsail(hsail_runtime_t* run) {
   err = hsa_agent_get_info(run->agent, HSA_AGENT_INFO_PROFILE, &run->profile);
   check(Getting agent profile, err);
   if (run->profile != HSA_PROFILE_FULL) return failed("Profile not supported");
-  return (err == HSA_STATUS_SUCCESS) ? 0 : 1;
+  // Obtain Machine model
+  err = hsa_agent_get_info(run->agent, HSA_AGENT_INFO_MACHINE_MODEL, &run->machine_model);
+  check(Obtaining machine model, err);
+  return 0;
 }
 
-int create_queue(hsa_agent_t agent, hsa_queue_t** queue) {
-  hsa_status_t err;
+int initialize_queue(hsa_agent_t agent, hsa_queue_t** queue) {
   /*
    * Query the maximum size of the queue.
    */
+  hsa_status_t err;
   uint32_t queue_size = 0;
   err = hsa_agent_get_info(agent, HSA_AGENT_INFO_QUEUE_MAX_SIZE, &queue_size);
   check(Querying the agent maximum queue size, err);
-  verb_printf("The maximum queue size is %u.\n", (unsigned int) queue_size);
+  printf("The maximum queue size is %u.\n", (unsigned int) queue_size);
 
   /*
    * Create a queue using the maximum size.
@@ -60,45 +63,10 @@ int create_queue(hsa_agent_t agent, hsa_queue_t** queue) {
   err = hsa_queue_create(agent, queue_size, HSA_QUEUE_TYPE_SINGLE,
       NULL, NULL, UINT32_MAX, UINT32_MAX, queue);
   check(Creating the queue, err);
-  return (err == HSA_STATUS_SUCCESS) ? 0 : 1;
-}
-
-int create_program(hsa_ext_program_t* program, hsail_runtime_t* run) {
-  hsa_status_t err;
-  /*
-   * Obtain the agent's machine model
-   * TODO: Could be done once
-   */
-  hsa_machine_model_t machine_model;
-  err = hsa_agent_get_info(run->agent, HSA_AGENT_INFO_MACHINE_MODEL, &machine_model);
-  check(Obtaining machine model, err);
-
-  /*
-   * Create hsa program.
-   */
-  memset(program, 0, sizeof(hsa_ext_program_t));
-  err = run->table_1_00.hsa_ext_program_create(machine_model, run->profile,
-      HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, NULL, program);
-  check(Create the program, err);
-
-  return (err == HSA_STATUS_SUCCESS) ? 0 : 1;
-}
-
-int extract_symbol(hsail_kobj_t* pkt_info, hsa_executable_symbol_t symbol) {
-  hsa_status_t err;
-
-  err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT, &pkt_info->kernel_object);
-  check(Extracting the symbol from the executable, err);
-  err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_SIZE, &pkt_info->kernarg_segment_size);
-  check(Extracting the kernarg segment size from the executable, err);
-  err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE, &pkt_info->group_segment_size);
-  check(Extracting the group segment size from the executable, err);
-  err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE, &pkt_info->private_segment_size);
-  check(Extracting the private segment from the executable, err);
   return 0;
 }
 
-int queue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t* pkt_info) {
+int enqueue_packet(hsa_queue_t* queue, hsa_signal_t sign, hsail_kobj_t* pkt_info) {
   /*
    * Obtain the current queue write index.
    * TODO: Should verify if queue not full

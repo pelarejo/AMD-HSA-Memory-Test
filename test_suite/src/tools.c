@@ -18,3 +18,8 @@ int failed(const char* msg) {
   fprintf(stderr, "%s\n", msg);
   return 1;
 }
+
+int failed_i(const char* msg, int ret) {
+  fprintf(stderr, "%s\n", msg);
+  return ret;
+}

@@ -1,5 +1,7 @@
 #include "test_suite.h"
 #include "test_racing.h"
+#include "tools.h"
+#include "hsail_helper.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,23 +42,5 @@ int run_tests(test_unit_t* suite, int size, hsail_runtime_t* runtime) {
 
 int destroy_tests(test_unit_t* suite) {
   free(suite);
-  return 0;
-}
-
-test_module_t* new_test_module_t(char *name) {
-  test_module_t* dts = malloc(sizeof(test_module_t));
-  if (dts == NULL) return NULL;
-  dts->name = strdup(name);
-  dts->next = NULL;
-  return dts;
-}
-
-int destroy_test_module_t(test_module_t* dts) {
-  while (dts != NULL) {
-    test_module_t* next = dts->next;
-    free(dts->name);
-    free(dts);
-    dts = next;
-  }
   return 0;
 }

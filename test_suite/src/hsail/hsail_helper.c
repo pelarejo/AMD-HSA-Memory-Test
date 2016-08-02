@@ -41,6 +41,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "hsail_helper.h"
+#include "tools.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,12 +111,12 @@ hsa_status_t get_fine_grained_memory_region(hsa_region_t region, void* data) {
  * Loads a BRIG module from a specified file. This
  * function does not validate the module.
  */
-int load_module_from_file(const char* file_name, hsa_ext_module_t* module) {
+hsa_status_t load_module_from_file(const char* file_name, hsa_ext_module_t* module) {
     int rc = -1;
     FILE *fp = fopen(file_name, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Error: %s file not found\n", file_name);
-        return 1;
+        return HSA_STATUS_ERROR;
     }
 
     rc = fseek(fp, 0, SEEK_END);
@@ -133,5 +134,19 @@ int load_module_from_file(const char* file_name, hsa_ext_module_t* module) {
         *module = (hsa_ext_module_t) buf;
     }
     fclose(fp);
-    return rc;
+    return (rc == 0) ? HSA_STATUS_SUCCESS : HSA_STATUS_ERROR;
+}
+
+hsa_status_t get_symbol_info(hsa_executable_symbol_t symbol, hsail_kobj_t* pkt_info) {
+    hsa_status_t err;
+
+    err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT, &pkt_info->kernel_object);
+    hcheck(Extracting the symbol from the executable, err);
+    err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_KERNARG_SEGMENT_SIZE, &pkt_info->kernarg_segment_size);
+    hcheck(Extracting the kernarg segment size from the executable, err);
+    err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE, &pkt_info->group_segment_size);
+    hcheck(Extracting the group segment size from the executable, err);
+    err = hsa_executable_symbol_get_info(symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE, &pkt_info->private_segment_size);
+    hcheck(Extracting the private segment from the executable, err);
+    return err;
 }

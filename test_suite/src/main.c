@@ -55,23 +55,6 @@
 #include <string.h>
 #include <getopt.h>
 
-
-
-int parseArguments(int argc, char **argv) {
-    int opt;
-
-    while ((opt = getopt(argc, argv, "v")) != -1) {
-      switch (opt) {
-        case 'v': verbose_print = true;
-          break;
-        default:
-        fprintf(stderr, "Usage:./%s [-v]\n", argv[0]);
-        return false;
-      }
-      return true;
-  }
-}
-
 int main(int argc, char **argv) {
   if (parseArguments(argc, argv) == false) return 1;
 
@@ -82,19 +65,19 @@ int main(int argc, char **argv) {
   //TODO: check error
   if (initialize_hsail(&run) != 0) return failed("Could not initialize_hsail");
 
-  if (create_queue(run.agent, &run.queue) != 0) return failed("Could not create queue");
+  if (initialize_queue(run.agent, &run.queue) != 0) return failed("Could not create queue");
 
   hsail_kargs_t arg;
   allocate_arguments(&run, &arg);
 
-  test_module_t* start = NULL;
+  hsail_module_t* start = NULL;
   if (new_test_module(&start, "test_full") == 1
       || new_test_module(&start, "test_full_2") == 1) {
         return 1;
     }
 
   hsail_finalize_t fin;
-  if (finalize_module(start, &run, &fin)) return 1;
+  if (finalize_modules(start, &run, &fin)) return 1;
 
   // SIGNAL
   /*
@@ -111,7 +94,7 @@ int main(int argc, char **argv) {
   hsail_kargs_t args;
   allocate_arguments(&run, &args);
 
-  test_module_t* tmp = start;
+  hsail_module_t* tmp = start;
   while (tmp != NULL) {
     allocate_kernarg(&run, &args, &tmp->pkt_info);
     tmp = tmp->next;
@@ -121,7 +104,7 @@ int main(int argc, char **argv) {
   int index;
   tmp = start;
   while (tmp != NULL) {
-    index = queue_packet(run.queue, signal, &tmp->pkt_info);
+    index = enqueue_packet(run.queue, signal, &tmp->pkt_info);
     hsa_signal_store_relaxed((run.queue)->doorbell_signal, index);
     tmp = tmp->next;
   }
@@ -156,12 +139,7 @@ int main(int argc, char **argv) {
   /*
    * Cleanup all allocated resources.
    */
-  tmp = start;
-  while (tmp != NULL && err == HSA_STATUS_SUCCESS) {
-      err = hsa_memory_free(tmp->pkt_info.kernarg_address);
-      tmp = tmp->next;
-  }
-  check(Freeing kernel argument memory buffer, err);
+  destroy_test_modules(start);
 
   err = hsa_signal_destroy(signal);
   check(Destroying the signal, err);
@@ -184,8 +162,22 @@ int main(int argc, char **argv) {
   err = hsa_shut_down();
   check(Shutting down the runtime, err);
 
-
   return 0;
+}
+
+int parseArguments(int argc, char **argv) {
+    int opt;
+
+    while ((opt = getopt(argc, argv, "v")) != -1) {
+      switch (opt) {
+        case 'v': verbose_print = true;
+          break;
+        default:
+        fprintf(stderr, "Usage:./%s [-v]\n", argv[0]);
+        return false;
+      }
+      return true;
+  }
 }
 
 //if ((size = init_tests(suite)) == -1) return failed("Could not init test suite");

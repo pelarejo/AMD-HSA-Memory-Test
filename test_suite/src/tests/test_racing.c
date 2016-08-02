@@ -11,12 +11,13 @@ int test_racing_simple(char *in, char *out, hsail_runtime_t* run) {
   //LOAD module
   // Create signals
   //analyse output
-  test_module_t* start = new_test_module_t("test_full");
-  start->next = new_test_module_t("test_full_2");
+  hsail_module_t* start = NULL;
+  new_test_module(&start, "test_full");
+  new_test_module(&start, "test_full_2");
 
   hsail_finalize_t fin;
 
-  finalize_module(start, run, &fin);
+  //finalize_module(start, run, &fin);
 
   return 0;
 }
