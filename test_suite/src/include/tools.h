@@ -4,6 +4,7 @@
 #define true 1
 #define false 0
 
+extern int all_print;
 extern int verbose_print;
 
 void verb_printf(const char *format, ...);

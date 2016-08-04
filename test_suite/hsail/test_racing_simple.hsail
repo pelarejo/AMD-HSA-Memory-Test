@@ -44,34 +44,18 @@ module &m:1:0:$full:$large:$default;
 
 decl prog function &abort()();
 
-group_u8 &x;
-group_u8 &y;
-
-group_u8 &w;
-group_u8 &z;
-
-prog kernel &__test_full_kernel(
+prog kernel &__test_racing_simple_kernel(
 	kernarg_u64 %in,
 	kernarg_u64 %out)
 {
-@__test_full_kernel_entry:
+@__test_racing_simplel_entry:
 	// BB#0:          -                   // %entry
+
 	workitemabsid_u32		$s0, 0;						// get work item id
+	cvt_s64_s32	$d0, $s0;									// convert 32 to 64
 
-
-	// innit group variables
-	//st_group_u8 3, [&x];
-	//st_group_u8 3, [&y];
-	//barrier;
-
-	// Setup d1 to write in array[item id]
-
-	cvt_s64_s32	$d0, $s0;															// convert 32 to 64
-	ld_kernarg_align(8)_width(all)_u64	$d1, [%out];	// load address of out in d1
-	add_u64	$d1, $d1, $d0;														// add shifted id to address of d1, moves to the correct position
-	ld_kernarg_align(8)_width(all)_u64	$d2, [%in];		// same for in
-	add_u64	$d0, $d2, $d0;														// same for in
-
+	ld_kernarg_align(8)_width(all)_u64	$d1, [%in];		// load addr in
+	ld_kernarg_align(8)_width(all)_u64	$d2, [%out];	// load address of out in d1
 
 	cmp_eq_b1_u32				$c0, $s0, 0;			// compare if id equal zero
 	cbr_b1							$c0, @ZERO;				// go to label if true
@@ -83,14 +67,18 @@ prog kernel &__test_full_kernel(
 	ret;																	// Return if false
 
 @ZERO:
-	st_group_u8 2, [&x];
-	ld_group_u8 $s0, [&y];
-	st_global_u8	$s0, [$d1];
+	add_u64	$d3, $d1, 1;
+	st_global_s8 1, [$d1]; // x = 1
+	st_global_s8 1, [$d3]; // y = 1
 	br @END;
 
 @ONE:
-	st_group_u8 1, [&y];
-	ld_group_u8 $s0, [&x];
-	st_global_u8	$s0, [$d1];
+	add_u64	$d3, $d1, 1;
+	ld_global_s8 $s0, [$d3]; // r1 = y
+	ld_global_s8 $s1, [$d1]; // r2 = x
+
+	add_u64	$d3, $d2, 1;
+	st_global_u8 $s0, [$d2];	// store in out
+	st_global_u8	$s1, [$d3];
 	br @END;
 };

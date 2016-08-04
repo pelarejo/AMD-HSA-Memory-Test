@@ -94,8 +94,10 @@ int main(int argc, char **argv) {
 int parseArguments(int argc, char **argv) {
     int opt;
 
-    while ((opt = getopt(argc, argv, "v")) != -1) {
+    while ((opt = getopt(argc, argv, "va")) != -1) {
       switch (opt) {
+        case 'a': all_print = true;
+          break;
         case 'v': verbose_print = true;
           break;
         default:

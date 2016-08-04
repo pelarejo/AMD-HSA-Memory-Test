@@ -5,7 +5,7 @@
 
 const int KERNARG_ALLOC_SIZE = 1024*1024*4;
 
-int reset_arguments(hsail_kargs_t* args) {
+int reset_arguments(int in, hsail_kargs_t* args) {
   memset(args->in, 1, KERNARG_ALLOC_SIZE);
   memset(args->out, 0, KERNARG_ALLOC_SIZE);
 }

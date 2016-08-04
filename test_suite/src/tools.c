@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+int all_print = false;
 int verbose_print = false;
 
 // WARNING, FORMAT LIMITED TO 256

@@ -16,21 +16,21 @@ int init_tests(test_unit_t** suite) {
     return -1;
   }
 
-  s[0].ctr = 1;
-  strcpy(s[0].name, "test_racing_simple");
+  s[0].ctr = 1000;
+  strcpy(s[0].name, "test racing simple");
   s[0].init = &test_racing_simple;
   s[0].res = &test_racing_simple_res;
 
   s[1].ctr = 1;
-  strcpy(s[1].name, "test_racing_simple_2");
-  s[1].init = &test_racing_simple;
-  s[1].res = &test_racing_simple_res;
+  strcpy(s[1].name, "test racing multiple");
+  s[1].init = &test_racing_mult;
+  s[1].res = &test_racing_mult_res;
 
   *suite = s;
   return size;
 }
 
-int run_test(test_unit_t* t, hsail_runtime_t* run) {
+int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   hsail_finalize_t fin;
   hsail_module_t* list = t->init(&run->args);
   if (list == NULL) return 1;
@@ -72,7 +72,7 @@ int run_test(test_unit_t* t, hsail_runtime_t* run) {
   err = hsa_code_object_destroy(fin.code_object);
   check(Destroying the code object, err);
 
-  return t->res(&run->args);
+  return t->res(ctr+1, &run->args);
 }
 
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run) {
@@ -80,8 +80,10 @@ int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run) {
   int i = 0;
   while (i < size) { // While test exist
     printf("\nRunning test: %s\n", suite[i].name);
-    while (suite[i].ctr-- > 0) { // While running it multipletimes
-      err = run_test(&suite[i], run);
+    int j = 0;
+    while (j < suite[i].ctr) { // While running it multipletimes
+      err = run_test(j, &suite[i], run);
+      j++;
     }
     if (err == 0) printf("%s\n", "Passed validation");
     else printf("%s\n", "Validation failed");
