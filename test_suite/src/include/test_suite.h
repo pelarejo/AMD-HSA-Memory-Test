@@ -15,6 +15,8 @@ typedef struct {
   result_ptr_t res;
 } test_unit_t;
 
+void construct_t(test_unit_t* t, int ctr, char* name,
+  init_ptr_t init, result_ptr_t res);
 int init_tests(test_unit_t** suite);
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run);
 int destroy_tests(test_unit_t* suite);

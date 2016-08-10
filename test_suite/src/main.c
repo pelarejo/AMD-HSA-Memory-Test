@@ -101,7 +101,7 @@ int parseArguments(int argc, char **argv) {
         case 'v': verbose_print = true;
           break;
         default:
-        fprintf(stderr, "Usage:./%s [-v]\n", argv[0]);
+        fprintf(stderr, "Usage:%s [-v]\n", argv[0]);
         return false;
       }
       return true;

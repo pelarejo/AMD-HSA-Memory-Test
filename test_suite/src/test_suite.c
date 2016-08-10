@@ -8,27 +8,32 @@
 #include <stdio.h>
 #include <string.h>
 
+void construct_t(test_unit_t* t, int ctr, char* name,
+    init_ptr_t init, result_ptr_t res) {
+  t->ctr = ctr;
+  strcpy(t->name, name);
+  t->init = init;
+  t->res = res;
+}
+
 // Returns -1 if failed, the array size otherwise
 int init_tests(test_unit_t** suite) {
   const int size = 2;
   test_unit_t* s = malloc(sizeof(test_unit_t) * size);
+  *suite = s;
   if (s == NULL) {
     return -1;
   }
 
-  s[0].ctr = 1000;
-  strcpy(s[0].name, "test racing simple");
-  s[0].init = &test_racing_simple;
-  s[0].res = &test_racing_simple_res;
+  construct_t(&s[0], 1, "Message Passing",
+    &test_racing_simple, &test_racing_simple_res);
 
-  s[1].ctr = 1;
-  strcpy(s[1].name, "test racing multiple");
-  s[1].init = &test_racing_mult;
-  s[1].res = &test_racing_mult_res;
+  construct_t(&s[1], 1, "test racing multiple",
+    &test_racing_mult, &test_racing_mult_res);
 
-  *suite = s;
   return size;
 }
+
 
 int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   hsail_finalize_t fin;
