@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
 //
 // The University of Illinois/NCSA
 // Open Source License (NCSA)
@@ -48,9 +48,6 @@ prog kernel &__test_racing_simple_kernel(
 	kernarg_u64 %in,
 	kernarg_u64 %out)
 {
-@__test_racing_simplel_entry:
-	// BB#0:          -                   // %entry
-
 	workitemabsid_u32		$s0, 0;						// get work item id
 	cvt_s64_s32	$d0, $s0;									// convert 32 to 64
 

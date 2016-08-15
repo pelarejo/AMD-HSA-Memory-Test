@@ -14,4 +14,8 @@ int test_racing_simple_res(int nbr, hsail_kargs_t* args);
 hsail_module_t* test_racing_mult(hsail_kargs_t* args);
 int test_racing_mult_res(int nbr, hsail_kargs_t* args);
 
+// MESSAGE PASSING
+hsail_module_t* test_mp(hsail_kargs_t* args);
+int test_mp_res(int nbr, hsail_kargs_t* args);
+
 #endif

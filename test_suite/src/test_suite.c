@@ -18,18 +18,21 @@ void construct_t(test_unit_t* t, int ctr, char* name,
 
 // Returns -1 if failed, the array size otherwise
 int init_tests(test_unit_t** suite) {
-  const int size = 2;
+  const int size = 3;
   test_unit_t* s = malloc(sizeof(test_unit_t) * size);
   *suite = s;
   if (s == NULL) {
     return -1;
   }
 
-  construct_t(&s[0], 1, "Message Passing",
+  construct_t(&s[0], 1, "Test Racing Simple",
     &test_racing_simple, &test_racing_simple_res);
 
-  construct_t(&s[1], 1, "test racing multiple",
+  construct_t(&s[1], 1, "Test Racing Multiple",
     &test_racing_mult, &test_racing_mult_res);
+
+  construct_t(&s[2], 500, "Test Message Passing",
+    &test_mp, &test_mp_res);
 
   return size;
 }
@@ -81,12 +84,12 @@ int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
 }
 
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run) {
-  int err;
   int i = 0;
   while (i < size) { // While test exist
     printf("\nRunning test: %s\n", suite[i].name);
     int j = 0;
-    while (j < suite[i].ctr) { // While running it multipletimes
+    int err = 0;
+    while (err == 0 && j < suite[i].ctr) { // While running it multiple times
       err = run_test(j, &suite[i], run);
       j++;
     }
