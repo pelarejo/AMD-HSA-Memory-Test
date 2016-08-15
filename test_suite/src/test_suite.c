@@ -89,6 +89,14 @@ int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   return t->res(ctr+1, &run->args) == 0 ? SUCCESS : FAILURE;
 }
 
+static int print_thousands(int nbr) {
+  const int th = nbr/PRINT_RTO;
+  if (nbr == 1 || nbr == th*PRINT_RTO) {
+    printf("%dk.", th);
+    fflush(stdout);
+  }
+}
+
 // TODO: Save outputs and print seperately
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run) {
   int i = 0;
@@ -98,11 +106,8 @@ int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run) {
     int err = 0;
     int failed = 0;
     // While running it multiple times
-    while (err != CRITICAL && j <= suite[i].ctr) {
-      if (j == (j/PRINT_RTO)*PRINT_RTO) {
-        printf("%dk.", j/PRINT_RTO);
-        fflush(stdout);
-      }
+    while (err != CRITICAL && j < suite[i].ctr) {
+      print_thousands(j+1);
       err = run_test(j, &suite[i], run);
       if (err == FAILURE) failed++;
       j++;
