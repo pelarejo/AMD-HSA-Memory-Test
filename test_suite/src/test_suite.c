@@ -8,6 +8,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#define SUCCESS 0
+#define FAILURE 1
+#define CRITICAL 2
+
+#define PRINT_RTO 1000
+
 void construct_t(test_unit_t* t, int ctr, char* name,
     init_ptr_t init, result_ptr_t res) {
   t->ctr = ctr;
@@ -28,10 +34,10 @@ int init_tests(test_unit_t** suite) {
   construct_t(&s[0], 1, "Test Racing Simple",
     &test_racing_simple, &test_racing_simple_res);
 
-  construct_t(&s[1], 1, "Test Racing Multiple",
+  construct_t(&s[2], 1, "Test Racing Multiple",
     &test_racing_mult, &test_racing_mult_res);
 
-  construct_t(&s[2], 500, "Test Message Passing",
+  construct_t(&s[1], 2000, "Test Message Passing",
     &test_mp, &test_mp_res);
 
   return size;
@@ -41,8 +47,8 @@ int init_tests(test_unit_t** suite) {
 int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   hsail_finalize_t fin;
   hsail_module_t* list = t->init(&run->args);
-  if (list == NULL) return 1;
-  if (finalize_modules(list, run, &fin)) return 1;
+  if (list == NULL) return CRITICAL;
+  if (finalize_modules(list, run, &fin)) return CRITICAL;
 
   int size = 0;
   hsail_module_t* tmp = list;
@@ -75,26 +81,37 @@ int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   hsa_status_t err;
   destroy_hsail_modules(list);
   err = hsa_executable_destroy(fin.executable);
-  check(Destroying the executable, err);
+  ccheck(Destroying the executable, err, CRITICAL);
 
   err = hsa_code_object_destroy(fin.code_object);
-  check(Destroying the code object, err);
+  ccheck(Destroying the code object, err, CRITICAL);
 
-  return t->res(ctr+1, &run->args);
+  return t->res(ctr+1, &run->args) == 0 ? SUCCESS : FAILURE;
 }
 
+// TODO: Save outputs and print seperately
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run) {
   int i = 0;
   while (i < size) { // While test exist
     printf("\nRunning test: %s\n", suite[i].name);
     int j = 0;
     int err = 0;
-    while (err == 0 && j < suite[i].ctr) { // While running it multiple times
+    int failed = 0;
+    // While running it multiple times
+    while (err != CRITICAL && j <= suite[i].ctr) {
+      if (j == (j/PRINT_RTO)*PRINT_RTO) {
+        printf("%dk.", j/PRINT_RTO);
+        fflush(stdout);
+      }
       err = run_test(j, &suite[i], run);
+      if (err == FAILURE) failed++;
       j++;
     }
-    if (err == 0) printf("%s\n", "Passed validation");
-    else printf("%s\n", "Validation failed");
+    if (err == CRITICAL) printf("\n%s\n", "Critical error, test aborted");
+    else if (failed > 0) {
+      double ratio = (double) failed / suite[i].ctr;
+      printf("\n%s: %.2f%% failures\n", "Validation failed", ratio * 100.0);
+    } else printf("\n%s\n", "Passed validation");
     i++;
   }
   return 0;

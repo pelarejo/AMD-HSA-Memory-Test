@@ -27,4 +27,12 @@ if (status != HSA_STATUS_SUCCESS) { \
    verb_printf("%s succeeded.\n", #msg); \
 }
 
+#define ccheck(msg, status, ret) \
+if (status != HSA_STATUS_SUCCESS) { \
+    verb_printf("%s failed.\n", #msg); \
+    return ret; \
+} else { \
+   verb_printf("%s succeeded.\n", #msg); \
+}
+
 #endif
