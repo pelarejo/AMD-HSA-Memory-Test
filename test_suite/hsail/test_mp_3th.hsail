@@ -2,9 +2,9 @@ module &m:1:0:$full:$large:$default;
 
 decl prog function &abort()();
 
-group_s8 &rdy;
-group_s8 &init1;
-group_s8 &init2;
+group_b32 &rdy;
+group_b32 &init1;
+group_b32 &init2;
 
 prog kernel &__test_mp_3th_kernel(
 kernarg_u64 %in,
@@ -35,9 +35,9 @@ ret;																	// Return if false
 
 @ZERO:
 add_u64	$d3, $d1, 1;     // d3 = d1+1 -- y_ptr
-st_group_s8 1, [&init1]; // Signal ready
+atomicnoret_st_group_screl_wg_b32 [&init1], 1; // Signal ready
 @LOOP:
-ld_group_s8 $s0, [&rdy];
+atomic_ld_group_scacq_wg_b32 $s0, [&rdy];
 cmp_eq_b1_u32 $c0, $s0, 0; // rdy == 0
 cbr_b1 $c0, @LOOP;
 
@@ -48,9 +48,9 @@ br @END;
 
 @ONE:
 add_u64	$d3, $d1, 1;     // r2_ptr
-st_group_s8 1, [&init2]; // Signal ready
+atomicnoret_st_group_screl_wg_b32 [&init2], 1; // Signal ready
 @LOOP2:
-ld_group_s8 $s0, [&rdy];
+atomic_ld_group_scacq_wg_b32 $s0, [&rdy];
 cmp_eq_b1_u32 $c0, $s0, 0; // rdy == 0 ?
 cbr_b1 $c0, @LOOP2;
 
@@ -67,13 +67,13 @@ br @END;
 // ACTIVATION THREAD
 @TWO:
 @LOOP3:
-ld_group_s8 $s0, [&init1];
-ld_group_s8 $s1, [&init2];
+atomic_ld_group_scacq_wg_b32 $s0, [&init1];
+atomic_ld_group_scacq_wg_b32 $s1, [&init2];
 cmp_eq_b1_u32 $c0, $s0, 0; // init1 == 0 ?
 cbr_b1 $c0, @LOOP3;
 cmp_eq_b1_u32 $c0, $s1, 0; // init2 == 0 ?
 cbr_b1 $c0, @LOOP3;
 
-st_group_s8 1, [&rdy];  // Activates worker thread
+atomicnoret_st_group_screl_wg_b32 [&rdy], 1;  // Activates worker thread
 br @END;
 };
