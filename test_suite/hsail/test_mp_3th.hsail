@@ -1,3 +1,4 @@
+
 module &m:1:0:$full:$large:$default;
 
 decl prog function &abort()();
@@ -11,46 +12,71 @@ kernarg_u64 %in,
 kernarg_u64 %out)
 {
 workitemabsid_u32		$s0, 0;						// get work item id
-cvt_s64_s32	$d0, $s0;									// convert 32 to 64
+cvt_u64_u32	$d0, $s0;									// convert 32 to 64
 
 ld_kernarg_align(8)_width(all)_u64	$d1, [%in];		// load addr in
 ld_kernarg_align(8)_width(all)_u64	$d2, [%out];	// load address of out in d1
 
-st_group_s8 1, [&rdy]; // init wait
-st_group_s8 1, [&init1];
-st_group_s8 1, [&init2];
-barrier;
+st_group_s8 0, [&rdy]; // init wait
+st_group_s8 0, [&init1];
+st_group_s8 0, [&init2];
+barrier_width(all);
 
 cmp_eq_b1_u32				$c0, $s0, 0;			// compare if id equal zero
-cbr_b1							$c0, @ZERO;				// go to label if true
+cbr_b1							$c0, @TWO;				// go to label if true
 
 cmp_eq_b1_u32				$c0, $s0, 1;			// compare if id equal one
-cbr_b1							$c0, @ONE;				// go to label
+cbr_b1							$c0, @ZERO;				// go to label
 
 cmp_eq_b1_u32				$c0, $s0, 2;			// compare if id equal one
-cbr_b1							$c0, @TWO;				// go to label
+cbr_b1							$c0, @ONE;				// go to label
 
 @END:
 ret;																	// Return if false
 
-@ZERO:
-add_u64	$d3, $d1, 1;     // d3 = d1+1 -- y_ptr
-atomicnoret_st_group_screl_wg_b32 [&init1], 1; // Signal ready
+//add_u64	$d3, $d1, 1;     // d3 = d1+1 -- y_ptr
+//atomicnoret_st_group_rlx_wg_b32 [&init1], 1; // Signal ready
+// THREAD 0
+@ZERO: // LOOP TILL RDY 1
 @LOOP:
-atomic_ld_group_scacq_wg_b32 $s0, [&rdy];
+atomic_ld_group_rlx_wg_b32 $s0, [&rdy];
 cmp_eq_b1_u32 $c0, $s0, 0; // rdy == 0
 cbr_b1 $c0, @LOOP;
+br @END;
 
 // MESSAGE WRITE
 st_global_s8 1, [$d1]; // x = 1
 st_global_s8 1, [$d3]; // y = 1
 br @END;
 
-@ONE:
+
+
+
+// ACTIVATION THREAD
+@TWO: // ******* SET RDY TO 1
+atomicnoret_st_group_rlx_wg_b32 [&rdy], 1;  // Activates worker threads screl
+br @END;
+
+atomic_ld_group_rlx_wg_b32 $s0, [&init1]; // scacq
+cmp_eq_b1_u32 $c0, $s0, 0; // init1 == 0 ?
+cbr_b1 $c0, @TWO;
+
+atomic_ld_group_rlx_wg_b32 $s1, [&init2];
+cmp_eq_b1_u32 $c0, $s1, 0; // init2 == 0 ?
+cbr_b1 $c0, @TWO;
+
+
+
+
+
+
+
+@ONE:    // DEACTIVATED
+br @END; // DEACTIVATED
 add_u64	$d3, $d1, 1;     // r2_ptr
-atomicnoret_st_group_screl_wg_b32 [&init2], 1; // Signal ready
+atomicnoret_st_group_rlx_wg_b32 [&init2], 1; // Signal ready
 @LOOP2:
-atomic_ld_group_scacq_wg_b32 $s0, [&rdy];
+atomic_ld_group_rlx_wg_b32 $s0, [&rdy];
 cmp_eq_b1_u32 $c0, $s0, 0; // rdy == 0 ?
 cbr_b1 $c0, @LOOP2;
 
@@ -64,16 +90,5 @@ st_global_s8 $s0, [$d2];	// store in out
 st_global_s8	$s1, [$d3];
 br @END;
 
-// ACTIVATION THREAD
-@TWO:
-@LOOP3:
-atomic_ld_group_scacq_wg_b32 $s0, [&init1];
-atomic_ld_group_scacq_wg_b32 $s1, [&init2];
-cmp_eq_b1_u32 $c0, $s0, 0; // init1 == 0 ?
-cbr_b1 $c0, @LOOP3;
-cmp_eq_b1_u32 $c0, $s1, 0; // init2 == 0 ?
-cbr_b1 $c0, @LOOP3;
 
-atomicnoret_st_group_screl_wg_b32 [&rdy], 1;  // Activates worker thread
-br @END;
 };
