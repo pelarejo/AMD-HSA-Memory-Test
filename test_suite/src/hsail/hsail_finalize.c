@@ -41,6 +41,7 @@ int compile_code_object(hsail_module_t* list,
     // Destroy the program, it is no longer needed.
     err = run->table_1_00.hsa_ext_program_destroy(program);
     check(Destroying the program, err);
+    return 0;
 }
 
 int generate_executable(hsail_runtime_t* run, hsail_finalize_t* fin) {
@@ -78,19 +79,22 @@ int extract_dispatch_info(hsail_module_t* list,
       hsa_executable_symbol_t symbol;
       err = hsa_executable_get_symbol(fin->executable, NULL, buff,
         run->agent, 0, &symbol);
+      if (err != HSA_STATUS_SUCCESS) break;
       err = get_symbol_info(symbol, &(tmp->pkt_info));
       tmp = tmp->next;
     }
     check(Extract the symbol information from the executable, err);
+    return 0;
 }
 
 int finalize_modules(hsail_module_t* list,
   hsail_runtime_t* run,
   hsail_finalize_t* fin) {
 
-    compile_code_object(list, run, fin);
-    generate_executable(run, fin);
-    extract_dispatch_info(list, run, fin);
-
+    if (compile_code_object(list, run, fin) != 0
+        || generate_executable(run, fin) != 0
+        || extract_dispatch_info(list, run, fin) != 0) {
+          return 1;
+      }
     return 0;
 }

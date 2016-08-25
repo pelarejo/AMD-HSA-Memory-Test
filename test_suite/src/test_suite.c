@@ -20,6 +20,7 @@ void construct_t(test_unit_t* t, int ctr, char* name,
   strcpy(t->name, name);
   t->init = init;
   t->res = res;
+  t->typ = FROM_SOURCE;
 }
 
 // Returns -1 if failed, the array size otherwise
@@ -43,12 +44,25 @@ int init_tests(test_unit_t** suite) {
   return size;
 }
 
+int init_tests_from_file(char *name, int regs, test_unit_t** test) {
+  *test = malloc(sizeof(test_unit_t));
+  construct_t(*test, 1, name,
+    (init_ptr_t)&test_from_file, (result_ptr_t)&test_from_file_res);
+  (*test)->typ = FROM_FILE;
+  (*test)->regs = regs;
+  return 1;
+}
 
 int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   hsail_finalize_t fin;
-  hsail_module_t* list = t->init(&run->args);
+  hsail_module_t* list;
+  if (t->typ == FROM_FILE) {
+    list = ((init_file_ptr_t)t->init)(&run->args, t->name);
+  } else {
+    list = t->init(&run->args);
+  }
   if (list == NULL) return CRITICAL;
-  if (finalize_modules(list, run, &fin)) return CRITICAL;
+  if (finalize_modules(list, run, &fin) == 1) return CRITICAL;
 
   int size = 0;
   hsail_module_t* tmp = list;
@@ -86,6 +100,9 @@ int run_test(int ctr, test_unit_t* t, hsail_runtime_t* run) {
   err = hsa_code_object_destroy(fin.code_object);
   ccheck(Destroying the code object, err, CRITICAL);
 
+  if (t->typ == FROM_FILE) {
+    return ((res_file_ptr_t)t->res)(ctr+1, &run->args, t->regs) == 0 ? SUCCESS : FAILURE;
+  }
   return t->res(ctr+1, &run->args) == 0 ? SUCCESS : FAILURE;
 }
 

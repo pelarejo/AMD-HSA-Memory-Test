@@ -7,10 +7,16 @@
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_finalize.h"
 
+typedef enum {
+  FROM_FILE,
+  FROM_SOURCE
+} TYPE_E;
+
 typedef struct {
   int ctr;
   char name[256];
-  hsail_module_t* list;
+  TYPE_E typ;
+  int regs;
   init_ptr_t init;
   result_ptr_t res;
 } test_unit_t;
@@ -18,6 +24,7 @@ typedef struct {
 void construct_t(test_unit_t* t, int ctr, char* name,
   init_ptr_t init, result_ptr_t res);
 int init_tests(test_unit_t** suite);
+int init_tests_from_file(char *name, int regs, test_unit_t** test);
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run);
 int destroy_tests(test_unit_t* suite);
 

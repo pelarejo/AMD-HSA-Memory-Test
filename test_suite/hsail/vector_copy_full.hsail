@@ -44,7 +44,7 @@ module &m:1:0:$full:$large:$default;
 
 decl prog function &abort()();
 
-prog kernel &__vector_copy_kernel(
+prog kernel &__vector_copy_full_kernel(
 	kernarg_u64 %in,
 	kernarg_u64 %out)
 {
