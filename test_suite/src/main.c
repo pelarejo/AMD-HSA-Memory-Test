@@ -86,7 +86,7 @@ int parseArguments(int argc, char **argv) {
           }
           break;
         case 'h':
-            printf("Usage:%s [-va] [-n file_name -r regs]\n", argv[0]);
+            printf("Usage:%s [-vah] [-n file_name -r regs]\n", argv[0]);
             printf("%s\t%s\n", "-h", "print this help message");
             printf("%s\t%s\n", "-v", "verbose mode");
             printf("%s\t%s\n", "-a", "all outputs mode");
@@ -98,7 +98,7 @@ int parseArguments(int argc, char **argv) {
               "nbr_runs defaults to 1 and should be within integer margin over 0");
             return false; // Should be another 'true' value
         default:
-        printf("Usage:%s [-va] [-n file_name -r regs]\n", argv[0]);
+        printf("Usage:%s [-vah] [-n file_name -r regs]\n", argv[0]);
         return false;
       }
   }
