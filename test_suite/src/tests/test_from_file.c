@@ -5,7 +5,7 @@ hsail_module_t* test_from_file(hsail_kargs_t* args, char *name) {
   if (new_hsail_module(&list, name) == 1) {
     return NULL;
   }
-  reset_arguments(0, args);
+  reset_arguments(1, args);
   return list;
 }
 

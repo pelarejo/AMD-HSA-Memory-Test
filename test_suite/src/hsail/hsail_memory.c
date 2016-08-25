@@ -3,11 +3,13 @@
 #include "tools.h"
 #include <string.h>
 
-const int KERNARG_ALLOC_SIZE = 1024*1024*4;
+const int KERNARG_ALLOC_SIZE = 1024*1024*sizeof(mem_t);
 
-int reset_arguments(int in, hsail_kargs_t* args) {
-  memset(args->in, 1, KERNARG_ALLOC_SIZE);
-  memset(args->out, 0, KERNARG_ALLOC_SIZE);
+int reset_arguments(mem_t in, hsail_kargs_t* args) {
+  for (int i = 0; i < KERNARG_ALLOC_SIZE/sizeof(mem_t); ++i) {
+    ((mem_t*)args->in)[i] = in;
+    ((mem_t*)args->out)[i] = 0;
+  }
 }
 
 int allocate_arguments(hsa_agent_t agent, hsail_kargs_t* args) {

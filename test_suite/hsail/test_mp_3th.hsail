@@ -16,9 +16,9 @@ cvt_s64_s32	$d0, $s0;									// convert 32 to 64
 ld_kernarg_align(8)_width(all)_u64	$d1, [%in];		// load addr in
 ld_kernarg_align(8)_width(all)_u64	$d2, [%out];	// load address of out in d1
 
-st_group_s8 1, [&rdy]; // init wait
-st_group_s8 1, [&init1];
-st_group_s8 1, [&init2];
+st_group_s8 0, [&rdy]; // init wait
+st_group_s8 0, [&init1];
+st_group_s8 0, [&init2];
 barrier;
 
 cmp_eq_b1_u32				$c0, $s0, 0;			// compare if id equal zero

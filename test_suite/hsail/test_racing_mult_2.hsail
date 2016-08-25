@@ -2,21 +2,25 @@ module &n:1:0:$full:$large:$default;
 
 decl prog function &abort()();
 
-group_u8 &x;
-group_u8 &y;
+group_u32 &x;
+group_u32 &y;
 
-group_u8 &w;
-group_u8 &z;
+group_u32 &w;
+group_u32 &z;
 
 prog kernel &__test_racing_mult_2_kernel(
 	kernarg_u64 %in,
 	kernarg_u64 %out)
 {
 @__test_racing_mult_2_kernel_entry:
-	// BB#0:          -         	// %entry
+	st_group_u32 0, [&w]; // Initialize goup vars and wait
+	st_group_u32 0, [&z];
+	barrier;
+
 	workitemabsid_u32		$s0, 0;		// get work item id
 	cvt_s64_s32	$d0, $s0;					// convert 32 to 64
-	add_u64 $d0, $d0, 2;					// we don't override previous run
+	mul_u64 $d0, $d0, 4;					// mult by sizeof int
+	add_u64 $d0, $d0, 8;					// we don't override racing1
 
 	ld_kernarg_align(8)_width(all)_u64	$d1, [%in];		// load address of in into d1
 	add_u64	$d1, $d1, $d0;														// set d1 to in[id]
@@ -34,14 +38,14 @@ prog kernel &__test_racing_mult_2_kernel(
 	ret;																	// Return if false
 
 @ZERO:
-	st_group_u8 3, [&w];			// w = 3
-	ld_group_u8 $s0, [&z];		// r0 = z
-	st_global_u8	$s0, [$d2];	// out[2] = z
+	st_group_u32 3, [&w];			// w = 3
+	ld_group_u32 $s0, [&z];		// r0 = z
+	st_global_u32	$s0, [$d2];	// out[2] = z
 	br @END;
 
 @ONE:
-	st_group_u8 4, [&z];			// z = 4
-	ld_group_u8 $s0, [&w];		// r0 = w
-	st_global_u8	$s0, [$d2];	// out[3] = w
+	ld_group_u32 $s0, [&w];		// r0 = w
+	st_group_u32 4, [&z];			// z = 4
+	st_global_u32 $s0, [$d2];	// out[3] = w
 	br @END;
 };

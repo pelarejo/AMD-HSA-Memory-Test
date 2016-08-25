@@ -64,18 +64,18 @@ prog kernel &__test_racing_simple_kernel(
 	ret;																	// Return if false
 
 @ZERO:
-	add_u64	$d3, $d1, 1;
-	st_global_s8 1, [$d1]; // x = 1
-	st_global_s8 1, [$d3]; // y = 1
+	add_u64	$d3, $d1, 4;		// move sizeof int
+	st_global_u32 1, [$d1]; // x = 1
+	st_global_u32 1, [$d3]; // y = 1
 	br @END;
 
 @ONE:
-	add_u64	$d3, $d1, 1;
-	ld_global_s8 $s0, [$d3]; // r1 = y
-	ld_global_s8 $s1, [$d1]; // r2 = x
+	add_u64	$d3, $d1, 4;
+	ld_global_u32 $s0, [$d3]; // r1 = y
+	ld_global_u32 $s1, [$d1]; // r2 = x
 
-	add_u64	$d3, $d2, 1;
-	st_global_u8 $s0, [$d2];	// store in out
-	st_global_u8	$s1, [$d3];
+	add_u64	$d3, $d2, 4;
+	st_global_u32 $s0, [$d2];	// store in out
+	st_global_u32	$s1, [$d3];
 	br @END;
 };

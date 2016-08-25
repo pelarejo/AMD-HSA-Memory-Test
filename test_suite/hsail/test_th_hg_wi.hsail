@@ -1,0 +1,26 @@
+
+module &m:1:0:$full:$large:$default;
+
+decl prog function &abort()();
+
+group_u32 &i;
+
+prog kernel &__test_th_hg_wi_kernel(
+kernarg_u64 %in,
+kernarg_u64 %out)
+{
+st_group_u32 0, [&i];
+barrier;
+workitemabsid_u32		$s0, 0;						// get work item id
+cvt_u64_u32	$d0, $s0;									// convert 32 to 64
+mul_u64 $d0, $d0, 4;
+
+ld_kernarg_align(8)_width(all)_u64	$d1, [%in];		// load addr in
+ld_kernarg_align(8)_width(all)_u64	$d2, [%out];	// load address of out in d1
+add_u64	$d2, $d2, $d0;
+
+
+atomic_add_group_scar_wg_u32 $s0, [&i], 1;
+st_global_u32 $s0, [$d2];
+
+};
