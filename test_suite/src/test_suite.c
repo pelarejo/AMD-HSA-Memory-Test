@@ -25,7 +25,7 @@ void construct_t(test_unit_t* t, int ctr, char* name,
 
 // Returns -1 if failed, the array size otherwise
 int init_tests(test_unit_t** suite) {
-  const int size = 3;
+  const int size = 2;
   test_unit_t* s = malloc(sizeof(test_unit_t) * size);
   *suite = s;
   if (s == NULL) {
@@ -35,11 +35,11 @@ int init_tests(test_unit_t** suite) {
   construct_t(&s[0], 1, "Test Racing Simple",
     &test_racing_simple, &test_racing_simple_res);
 
-  construct_t(&s[2], 1, "Test Racing Multiple",
+  construct_t(&s[1], 1, "Test Racing Multiple",
     &test_racing_mult, &test_racing_mult_res);
 
-  construct_t(&s[1], 2000, "Test Message Passing",
-    &test_mp, &test_mp_res);
+  /*construct_t(&s[1], 2000, "Test Message Passing",
+    &test_mp, &test_mp_res);*/
 
   return size;
 }
