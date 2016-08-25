@@ -24,7 +24,7 @@ typedef struct {
 void construct_t(test_unit_t* t, int ctr, char* name,
   init_ptr_t init, result_ptr_t res);
 int init_tests(test_unit_t** suite);
-int init_tests_from_file(char *name, int regs, test_unit_t** test);
+int init_tests_from_file(char *name, int regs, int nbr_runs, test_unit_t** test);
 int run_tests(test_unit_t* suite, int size, hsail_runtime_t* run);
 int destroy_tests(test_unit_t* suite);
 

@@ -44,9 +44,9 @@ int init_tests(test_unit_t** suite) {
   return size;
 }
 
-int init_tests_from_file(char *name, int regs, test_unit_t** test) {
+int init_tests_from_file(char *name, int regs, int nbr_runs, test_unit_t** test) {
   *test = malloc(sizeof(test_unit_t));
-  construct_t(*test, 1, name,
+  construct_t(*test, nbr_runs, name,
     (init_ptr_t)&test_from_file, (result_ptr_t)&test_from_file_res);
   (*test)->typ = FROM_FILE;
   (*test)->regs = regs;
